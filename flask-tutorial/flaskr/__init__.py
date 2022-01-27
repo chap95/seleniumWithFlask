@@ -1,12 +1,17 @@
 import os
 
+from selenium.webdriver.chrome.options import Options as ChromeOptions
+from selenium.webdriver.chrome.service import Service as ChromeService
+from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.common.by import By
+from webdriver_manager.chrome import ChromeDriverManager
+from selenium import webdriver
 from flask import Flask
-from . import db
-from . import auth
 
 
 def create_app(test_config=None):
     # create and configure the app
+    print(__name__)
     app = Flask(__name__, instance_relative_config=True)
     app.config.from_mapping(
         SECRET_KEY='dev',
@@ -31,6 +36,24 @@ def create_app(test_config=None):
     def hello():
         return 'Hello, World!'
 
-    db.init_app(app)
-    app.register_blueprint(auth.bp)
+    @app.route('/test')
+    def test():
+        service = ChromeService(
+            executable_path=ChromeDriverManager().install())
+        driver = webdriver.Chrome(service=service)
+        driver.get("https://www.naver.com")
+        print("before find 오늘 읽을 만할 글")
+        todayInterestingArticle = driver.find_element(
+            By.XPATH, '//*[@id=\"themecast\"]/div[1]/div[1]/div[1]/strong').text
+
+        print("todayInterestingArticle => ", todayInterestingArticle)
+        print("before find search box")
+
+        searchBox = driver.find_element_by_id(
+            "query").send_keys("노써치" + Keys.ENTER)
+        print('searchBox => ', searchBox)
+        webdriver.ActionChains(driver).key_down(
+            Keys.CONTROL).send_keys("a").perform()
+        return '테스트 입니도'
+
     return app
