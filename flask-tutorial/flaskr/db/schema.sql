@@ -1,0 +1,6 @@
+DROP TABLE IF EXISTS seleniumResult;
+
+CREATE TABLE seleniumResult (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  description TEXT UNIQUE NOT NULL,
+);
