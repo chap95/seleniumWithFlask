@@ -10,6 +10,8 @@ configparser==5.2.0
 crayons==0.4.0
 cryptography==36.0.1
 Flask==2.0.2
+Flask-SQLAlchemy==2.5.1
+greenlet==1.1.2
 h11==0.13.0
 idna==3.3
 itsdangerous==2.0.1
@@ -24,6 +26,7 @@ selenium==4.1.0
 six==1.16.0
 sniffio==1.2.0
 sortedcontainers==2.4.0
+SQLAlchemy==1.4.31
 toml==0.10.2
 trio==0.19.0
 trio-websocket==0.9.2

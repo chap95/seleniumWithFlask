@@ -1,6 +1,8 @@
 import os
 
 from flask import Flask, g
+from flask_sqlalchemy import SQLAlchemy
+
 from selenium.webdriver.chrome.options import Options as ChromeOptions
 from selenium.webdriver.chrome.service import Service as ChromeService
 from selenium.webdriver.common.keys import Keys
@@ -11,6 +13,8 @@ from selenium import webdriver
 
 def create_app(test_config=None):
     app = Flask(__name__, instance_relative_config=True)
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:////tmp/test.db'
+    db = SQLAlchemy(app)
     app.config.from_mapping(
         SECRET_KEY='dev',
         DATABASE=os.path.join(app.instance_path, 'flaskr.sqlite'),
