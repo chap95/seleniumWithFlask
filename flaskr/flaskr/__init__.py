@@ -1,5 +1,8 @@
+from logging import error
 import os
 import re
+from threading import Thread
+import time
 from typing import List
 
 from flask import Flask, g, jsonify
@@ -10,6 +13,10 @@ from selenium.webdriver.chrome.service import Service as ChromeService
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.by import By
 from selenium.webdriver.remote.webelement import WebElement
+from selenium.common.exceptions import NoSuchElementException
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+
 import sqlalchemy
 from sqlalchemy import engine
 from sqlalchemy.orm.session import Session
@@ -59,15 +66,47 @@ def selenium_execute():
     result = []
     filterList = ['[', ']', '/']
     shoppingTabList = driver.find_elements(By.ID, 'shopping-tab1_list')
-    for shoppingTab in shoppingTabList:
-        coupons: List[WebElement] = shoppingTab.find_elements(
-            By.CLASS_NAME, 'ppom_coupon')
-        for coupon in coupons:
-            aTag: WebElement = coupon.find_element(By.XPATH, '..')
-            text = aTag.text
-            for filterIndex in range(len(filterList)):
-                text = text.replace(filterList[filterIndex], '')
-            result.append(text)
+    try:
+        for shoppingTab in shoppingTabList:
+            coupons: List[WebElement] = shoppingTab.find_elements(
+                By.CLASS_NAME, 'ppom_coupon')
+            hrefList = []
+            for coupon in coupons:
+                # coupon.find_element(By.XPATH, '..')
+                # coupon: WebElement = WebDriverWait(driver, 3).until(
+                #     EC.presence_of_element_located(coupon))
+                aTag: WebElement = coupon.find_element(By.XPATH, '..')
+                text = aTag.text
+                for filterIndex in range(len(filterList)):
+                    text = text.replace(filterList[filterIndex], '')
+                result.append(text)
+                href = aTag.get_attribute('href')
+                # driver.get(href)
+                # try:
+                #     link = driver.find_element(By.CLASS_NAME, 'wordfix')
+                #     if(link):
+                #         print('link => ', link.text)
+                # except NoSuchElementException:
+                #     pass
+                # print('link => ', link)
+
+                # driver.back()
+
+            # for href in hrefList:
+            #     driver.get(href)
+            #     try:
+            #         link = driver.find_element(By.CLASS_NAME, 'wordfix')
+            #         if(link):
+            #             print('link => ', link.text)
+            #     except NoSuchElementException:
+            #         pass
+
+    except NoSuchElementException:
+        print('error => NoSuchElementException')
+        pass
+    except(RuntimeError):
+        print('error => ', RuntimeError)
+        driver.quit()
 
     for resultTextIndex in range(len(result)):
         data = Result(description=result[resultTextIndex])
@@ -87,7 +126,8 @@ def get_result():
         text = text.replace(')', '')
         text = text.replace('\'', '')
         text = text.replace(',', '')
-        data.append({'text': text})
+        if(len(text) > 0):
+            data.append({'text': text})
 
     print('data -> ', jsonify(data))
     return jsonify(data)
