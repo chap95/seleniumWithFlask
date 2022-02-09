@@ -1,7 +1,8 @@
 import os
+import re
 from typing import List
 
-from flask import Flask, g
+from flask import Flask, g, jsonify
 from flask_sqlalchemy import SQLAlchemy
 
 from selenium.webdriver.chrome.options import Options as ChromeOptions
@@ -9,6 +10,9 @@ from selenium.webdriver.chrome.service import Service as ChromeService
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.by import By
 from selenium.webdriver.remote.webelement import WebElement
+import sqlalchemy
+from sqlalchemy import engine
+from sqlalchemy.orm.session import Session
 from webdriver_manager.chrome import ChromeDriverManager
 from selenium import webdriver
 from flask_migrate import Migrate
@@ -26,8 +30,12 @@ PPOMPPU = 'https://www.ppomppu.co.kr/'
 
 
 class Result(db.Model):
+    __tablename__ = 'Result'
     id = db.Column(db.Integer, primary_key=True)
     description = db.Column(db.String(200))
+
+    def __init__(self, description=None):
+        self.description = description
 
     def __repr__(self) -> str:
         return '<Result %r>' % self.description
@@ -61,7 +69,28 @@ def selenium_execute():
                 text = text.replace(filterList[filterIndex], '')
             result.append(text)
 
+    for resultTextIndex in range(len(result)):
+        data = Result(description=result[resultTextIndex])
+        db.session.add(data)
+        db.session.commit()
     return '/'.join(result)
+
+
+@app.route('/getResult')
+def get_result():
+    data = []
+    getQuery = db.session.query(Result.description)
+    result = getQuery.all()
+    for row in result:
+        text = str(row)
+        text = text.replace('(', '')
+        text = text.replace(')', '')
+        text = text.replace('\'', '')
+        text = text.replace(',', '')
+        data.append({'text': text})
+
+    print('data -> ', jsonify(data))
+    return jsonify(data)
 
 # def create_app(test_config=None):
 #     db.create_all()
