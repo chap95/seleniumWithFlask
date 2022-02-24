@@ -81,6 +81,7 @@ def selenium_execute():
                     text = text.replace(filterList[filterIndex], '')
                 result.append(text)
                 href = aTag.get_attribute('href')
+                hrefList.append(href)
                 # driver.get(href)
                 # try:
                 #     link = driver.find_element(By.CLASS_NAME, 'wordfix')
@@ -92,14 +93,15 @@ def selenium_execute():
 
                 # driver.back()
 
-            # for href in hrefList:
-            #     driver.get(href)
-            #     try:
-            #         link = driver.find_element(By.CLASS_NAME, 'wordfix')
-            #         if(link):
-            #             print('link => ', link.text)
-            #     except NoSuchElementException:
-            #         pass
+            print('hrefList => ', hrefList)
+            for href in hrefList:
+                driver.get(href)
+                try:
+                    link = driver.find_element(By.CLASS_NAME, 'wordfix')
+                    if(link):
+                        print('link => ', link.text)
+                except NoSuchElementException:
+                    pass
 
     except NoSuchElementException:
         print('error => NoSuchElementException')
@@ -110,8 +112,11 @@ def selenium_execute():
 
     for resultTextIndex in range(len(result)):
         data = Result(description=result[resultTextIndex])
+        print('data => ', data)
         db.session.add(data)
         db.session.commit()
+
+    driver.quit()
     return '/'.join(result)
 
 
