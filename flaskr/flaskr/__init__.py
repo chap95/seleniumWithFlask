@@ -23,6 +23,7 @@ from sqlalchemy.orm.session import Session
 from webdriver_manager.chrome import ChromeDriverManager
 from selenium import webdriver
 from flask_migrate import Migrate
+from flaskr.api import bp
 
 app = Flask(__name__, instance_relative_config=True)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:////tmp/test.db'
@@ -32,6 +33,8 @@ app.config.from_mapping(
     SECRET_KEY='dev',
     DATABASE=os.path.join(app.instance_path, 'flaskr.sqlite'),
 )
+
+app.register_blueprint(bp, url_prefix='/api')
 
 PPOMPPU = 'https://www.ppomppu.co.kr/'
 
