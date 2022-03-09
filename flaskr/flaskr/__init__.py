@@ -24,6 +24,7 @@ from webdriver_manager.chrome import ChromeDriverManager
 from selenium import webdriver
 from flask_migrate import Migrate
 from flaskr.api import bp
+from flaskr.scarp import scrapBluePrint
 
 app = Flask(__name__, instance_relative_config=True)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:////tmp/test.db'
@@ -35,20 +36,21 @@ app.config.from_mapping(
 )
 
 app.register_blueprint(bp, url_prefix='/api')
-
-PPOMPPU = 'https://www.ppomppu.co.kr/'
+app.register_blueprint(scrapBluePrint, url_prefix='/scrap')
 
 
 class Result(db.Model):
     __tablename__ = 'Result'
     id = db.Column(db.Integer, primary_key=True)
     description = db.Column(db.String(200))
+    link = db.Column(db.String(200))
 
-    def __init__(self, description=None):
+    def __init__(self, description=None, link=None):
         self.description = description
+        self.link = link
 
     def __repr__(self) -> str:
-        return '<Result %r>' % self.description
+        return '<Result %r >' % self.description
 
 
 @app.route('/hello')
@@ -58,69 +60,6 @@ def hello():
 
 def printList(value):
     print('value => ', value)
-
-
-@app.route('/selenium')
-def selenium_execute():
-    service = ChromeService(
-        executable_path=ChromeDriverManager().install())
-    driver = webdriver.Chrome(service=service)
-    driver.get(PPOMPPU)
-    result = []
-    filterList = ['[', ']', '/']
-    shoppingTabList = driver.find_elements(By.ID, 'shopping-tab1_list')
-    try:
-        for shoppingTab in shoppingTabList:
-            coupons: List[WebElement] = shoppingTab.find_elements(
-                By.CLASS_NAME, 'ppom_coupon')
-            hrefList = []
-            for coupon in coupons:
-                # coupon.find_element(By.XPATH, '..')
-                # coupon: WebElement = WebDriverWait(driver, 3).until(
-                #     EC.presence_of_element_located(coupon))
-                aTag: WebElement = coupon.find_element(By.XPATH, '..')
-                text = aTag.text
-                for filterIndex in range(len(filterList)):
-                    text = text.replace(filterList[filterIndex], '')
-                result.append(text)
-                href = aTag.get_attribute('href')
-                hrefList.append(href)
-                # driver.get(href)
-                # try:
-                #     link = driver.find_element(By.CLASS_NAME, 'wordfix')
-                #     if(link):
-                #         print('link => ', link.text)
-                # except NoSuchElementException:
-                #     pass
-                # print('link => ', link)
-
-                # driver.back()
-
-            print('hrefList => ', hrefList)
-            for href in hrefList:
-                driver.get(href)
-                try:
-                    link = driver.find_element(By.CLASS_NAME, 'wordfix')
-                    if(link):
-                        print('link => ', link.text)
-                except NoSuchElementException:
-                    pass
-
-    except NoSuchElementException:
-        print('error => NoSuchElementException')
-        pass
-    except(RuntimeError):
-        print('error => ', RuntimeError)
-        driver.quit()
-
-    for resultTextIndex in range(len(result)):
-        data = Result(description=result[resultTextIndex])
-        print('data => ', data)
-        db.session.add(data)
-        db.session.commit()
-
-    driver.quit()
-    return '/'.join(result)
 
 
 @app.route('/getResult')
@@ -173,9 +112,9 @@ def get_result():
 #         print('result1 => ', result1)
 #         print("before find search box")
 #         searchBox = driver.find_element_by_id(
-#             "query").send_keys("노써치" + Keys.ENTER)
 #         print('searchBox => ', searchBox)
 #         webdriver.ActionChains(driver).key_down(
+#             "query").send_keys("노써치" + Keys.ENTER)
 #             Keys.CONTROL).send_keys("a").perform()
 #         return todayInterestingArticle
 #     return app
